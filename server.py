@@ -227,6 +227,7 @@ def print_button_listener():
 
 
 if __name__ == '__main__':
+    subprocess.run(['ngrok', 'http', '--url=mongoose-full-barely.ngrok-free.app', '50298'])
     Thread(target=run_discord_bot_in_thread, daemon=True).start()
     Thread(target=print_button_listener, daemon=True).start()
 
