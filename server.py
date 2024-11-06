@@ -11,6 +11,8 @@ import asyncio
 from threading import Thread
 import sqlite3
 from gpiozero import Button
+import subprocess
+import time
 
 current_prompt = ''
 
@@ -207,10 +209,19 @@ def print_button_listener():
 
     button = Button(2)
 
-    button.wait_for_press()
-    print('You pushed me')
+    subprocess.run(['sudo', 'rfcomm', 'connect', '0', '24:54:89:AE:0A:51'])
 
-    
+    time.sleep(5)
+
+    while True:
+
+        button.wait_for_press()
+
+        subprocess.run(['python', 'thermal-print.py', 'image.png', '>', '/dev/rfcomm0'])
+
+        time.sleep(10)
+
+
 
     
 

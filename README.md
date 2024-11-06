@@ -33,7 +33,7 @@ sudo apt-get install obexftp
 
 bash commands:
 bluetoothctl pair 0C:86:29:61:9B:14
-obexftp --nopath --noconn --uuid none --bluetooth 0C:86:29:61:9B:14 --channel 4 -p color.png
+obexftp --nopath --noconn --uuid none --bluetooth 0C:86:29:61:9B:14 --channel 2 -p color.png
 
 using ngork for free tunneling with permanent domain:
 ngrok http --url=mongoose-full-barely.ngrok-free.app 50298
