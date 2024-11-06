@@ -8,10 +8,17 @@
 - *pip install gpiozero*
 - *sudo apt install sqlite3*
 
-using ngork for free tunneling with permanent domain:
-ngrok http --url=mongoose-full-barely.ngrok-free.app 80
+raspberry pi pip installation guide:
+python -m venv ~/py_envs
+source ~/py_envs/bin/activate
+python -m pip install NAMEOFWHATEVER
 
-:run the following:
+pip install git+https://github.com/theacodes/phomemo_m02s.git
+
+python3 -m phomemo_m02s --mac 00:15:83:37:xx:xx /path/to/image.png
+
+
+using ngork for free tunneling with permanent domain:
 ngrok http --url=mongoose-full-barely.ngrok-free.app 50298
 
 ### API Ussage

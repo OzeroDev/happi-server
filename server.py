@@ -23,11 +23,11 @@ UNVERIFIED = 0
 con = sqlite3.connect("responses.db", check_same_thread=False)
 cur = con.cursor()
 
-def saveResponseToDB(prompt):
+def saveResponseToDB(prompt, response_type):
     cur.execute('''
-        INSERT INTO responses (prompt) 
-        VALUES (?)
-    ''', (prompt,))
+        INSERT INTO responses (prompt, type) 
+        VALUES (?, ?)
+    ''', (prompt, response_type))
     con.commit()
 
     return cur.lastrowid
@@ -60,6 +60,7 @@ class Client(discord.Client):
         print(f'Logged in as {self.user}')
         channel = client.get_channel(PROMPT_CHANNEL_ID)
         await channel.send('Current Prompt:\n'+current_prompt)
+        #await channel.purge()
 
 
 intents = discord.Intents.default()
@@ -78,9 +79,9 @@ async def on_raw_reaction_add(payload):
             approval_reaction = discord.utils.get(message.reactions, emoji='✅')
             disapproval_reaction = discord.utils.get(message.reactions, emoji='❌')
             
-            if disapproval_reaction.count > 1:
+            if disapproval_reaction and disapproval_reaction.count > 1:
                 unverifyResponse(img_id)
-            elif approval_reaction.count > 1:
+            elif approval_reaction and approval_reaction.count > 1:
                 verifyResponse(img_id)
 
 @client.event
@@ -107,8 +108,8 @@ async def sendImageToVerify(imagePath):
     await msg.add_reaction('❌')
 
 
-async def saveImage(image, prompt):
-    img_path = 'responses/'+str(saveResponseToDB(prompt))+'.png'
+async def saveImage(image, prompt, image_print_type):
+    img_path = 'responses/'+str(saveResponseToDB(prompt, image_print_type))+'.png'
     image.save(img_path, 'PNG')
 
     channel = client.get_channel(VERIFY_CHANNEL_ID)
@@ -161,7 +162,7 @@ def handle_add_ipad_response():
             text_y = 20
             draw.text((text_x, text_y), prompt, fill=(0, 0, 0), font=font)
 
-            client.loop.create_task(saveImage(mod_img, prompt))
+            client.loop.create_task(saveImage(mod_img, prompt, "thermal-printer"))
 
             return 'success'
         return 'failure'
@@ -203,5 +204,5 @@ def run_discord_bot_in_thread():
 if __name__ == '__main__':
     Thread(target=run_discord_bot_in_thread, daemon=True).start()
 
-    app.run(host='0.0.0.0', port=50298, debug=True) 
+    app.run(host='0.0.0.0', port=50298, debug=False) 
 
