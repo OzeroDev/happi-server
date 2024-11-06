@@ -5,7 +5,7 @@ from time import sleep
 GPIO.setmode(GPIO.BCM)
 
 # Define the button pin
-button_pin = 17
+button_pin = 2
 
 # Set up the button as an input with pull-up resistor
 GPIO.setup(button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
