@@ -14,6 +14,8 @@ source ~/py_envs/bin/activate
 python -m pip install NAMEOFWHATEVER
 
 ### phomemo printer instructions
+24:54:89:AE:0A:51
+
 bash commands:
 bluetoothctl devices
 bluetoothctl pair 24:54:89:AE:0A:51
@@ -22,6 +24,13 @@ sudo chmod a+rw /dev/rfcomm0
 thermal-print.py my-image.png > /dev/rfcomm0
 
 ### color printer instructions
+0C:86:29:61:9B:14
+
+sudo apt-get install bluetooth libbluetooth-dev
+sudo pip install pybluez
+sudo apt-get install obexftp
+
+
 bash commands:
 bluetoothctl pair 0C:86:29:61:9B:14
 obexftp --nopath --noconn --uuid none --bluetooth 0C:86:29:61:9B:14 --channel 4 -p color.png
