@@ -11,4 +11,4 @@ button = Button(2)
 button.wait_for_press()
 print('You pushed me')
 
-subprocess.run(['python', 'thermal-print.py', 'image.png', '>', '/dev/rfcomm0'])
+subprocess.Popen(['python', 'thermal-print.py', 'image.png', '>', '/dev/rfcomm0'])
