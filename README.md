@@ -13,10 +13,18 @@ python -m venv ~/py_envs
 source ~/py_envs/bin/activate
 python -m pip install NAMEOFWHATEVER
 
-pip install git+https://github.com/theacodes/phomemo_m02s.git
+### phomemo printer instructions
+bash commands:
+bluetoothctl devices
+bluetoothctl pair 24:54:89:AE:0A:51
+sudo rfcomm connect 0 24:54:89:AE:0A:51
+sudo chmod a+rw /dev/rfcomm0
+thermal-print.py my-image.png > /dev/rfcomm0
 
-python3 -m phomemo_m02s --mac 00:15:83:37:xx:xx /path/to/image.png
-
+### color printer instructions
+bash commands:
+bluetoothctl pair 0C:86:29:61:9B:14
+obexftp --nopath --noconn --uuid none --bluetooth 0C:86:29:61:9B:14 --channel 4 -p color.png
 
 using ngork for free tunneling with permanent domain:
 ngrok http --url=mongoose-full-barely.ngrok-free.app 50298

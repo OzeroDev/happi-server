@@ -10,6 +10,7 @@ import discord
 import asyncio
 from threading import Thread
 import sqlite3
+from gpiozero import Button
 
 current_prompt = ''
 
@@ -200,9 +201,23 @@ def run_discord_bot_in_thread():
     client.run(DISCORD_TOKEN)
 
 
+def print_button_listener():
+    # Important to make an event loop for the new thread
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
+    button = Button(2)
+
+    button.wait_for_press()
+    print('You pushed me')
+
+    
+
+    
+
 
 if __name__ == '__main__':
     Thread(target=run_discord_bot_in_thread, daemon=True).start()
+    Thread(target=print_button_listener, daemon=True).start()
 
     app.run(host='0.0.0.0', port=50298, debug=False) 
 
