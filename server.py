@@ -206,20 +206,27 @@ def run_discord_bot_in_thread():
 def print_button_listener():
     # Important to make an event loop for the new thread
     asyncio.set_event_loop(asyncio.new_event_loop())
-
+    print('a')
     button = Button(2)
+    print('b')
 
     subprocess.Popen(['sudo', 'rfcomm', 'connect', '0', '24:54:89:AE:0A:51'])
 
+    print('c')
     time.sleep(5)
+    print('d')
 
     while True:
 
+        print('e')
         button.wait_for_press()
 
+        print('f')
         subprocess.Popen(['python', 'thermal-print.py', 'image.png', '>', '/dev/rfcomm0'])
 
+        print('g')
         time.sleep(10)
+        print('h')
 
 
 
