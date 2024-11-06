@@ -50,6 +50,7 @@ ngrok config add-authtoken 2oRkK1wgSOXSluBaBvt2il8Xedi_dPazXWyV1P4c5QZm3Mxc
 
 ngrok http --url=mongoose-full-barely.ngrok-free.app 50298
 
+https://mongoose-full-barely.ngrok-free.app/
 
 ### API Ussage
 

@@ -209,7 +209,7 @@ def print_button_listener():
 
     button = Button(2)
 
-    subprocess.run(['sudo', 'rfcomm', 'connect', '0', '24:54:89:AE:0A:51'])
+    subprocess.Popen(['sudo', 'rfcomm', 'connect', '0', '24:54:89:AE:0A:51'])
 
     time.sleep(5)
 
@@ -217,7 +217,7 @@ def print_button_listener():
 
         button.wait_for_press()
 
-        subprocess.run(['python', 'thermal-print.py', 'image.png', '>', '/dev/rfcomm0'])
+        subprocess.Popen(['python', 'thermal-print.py', 'image.png', '>', '/dev/rfcomm0'])
 
         time.sleep(10)
 
@@ -227,9 +227,11 @@ def print_button_listener():
 
 
 if __name__ == '__main__':
-    subprocess.run(['ngrok', 'http', '--url=mongoose-full-barely.ngrok-free.app', '50298'])
+    staticUrl = subprocess.Popen(['ngrok', 'http', '--url=mongoose-full-barely.ngrok-free.app', '50298'])
     Thread(target=run_discord_bot_in_thread, daemon=True).start()
     Thread(target=print_button_listener, daemon=True).start()
 
     app.run(host='0.0.0.0', port=50298, debug=False) 
+
+    staticUrl.terminate()
 
