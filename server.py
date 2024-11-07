@@ -1,9 +1,9 @@
 import discord.client
 import discord.message
-from flask import Flask, request, json
+from flask import Flask, request, json, render_template, jsonify
 import base64
 from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from dotenv import load_dotenv
 import os
 import discord
@@ -44,7 +44,36 @@ def unverifyResponse(res_id):
     con.commit()
 
 
+def printRandomImg(prompt):
 
+    cur.execute("""
+        SELECT id, printedCount
+        FROM responses
+        WHERE prompt = ?
+        ORDER BY printedCount ASC, id ASC
+        LIMIT 1
+    """, (prompt,))
+
+
+    # Fetch the result
+    result = cur.fetchone()
+
+    if result:
+        response_id, printedCount = result
+        # Increment the printedCount value by 1
+        cur.execute("""
+            UPDATE responses
+            SET printedCount = ?
+            WHERE id = ?
+        """, (printedCount + 1, response_id))
+        
+        # Commit the changes to the database
+        con.commit()
+        
+        return "responses/"+str(response_id)+".png"
+    else:
+        return "no-responses.png"
+    
 
 
 
@@ -54,16 +83,16 @@ def unverifyResponse(res_id):
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 VERIFY_CHANNEL_ID = 1303107546164363286
-PROMPT_CHANNEL_ID = 1303463361442353213
+PROMPT_CHANNEL_ID = 1304147149574901800
+SERVER_CHANNEL_ID = 1304146632085868647
 
 
 
 class Client(discord.Client):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
-        channel = client.get_channel(PROMPT_CHANNEL_ID)
-        await channel.send('Current Prompt:\n'+current_prompt)
-        #await channel.purge()
+        channel = client.get_channel(SERVER_CHANNEL_ID)
+        await channel.send('The happi-server has just started running with the following prompt:\n'+current_prompt+'\n...')
 
 
 intents = discord.Intents.default()
@@ -83,9 +112,21 @@ async def on_raw_reaction_add(payload):
             disapproval_reaction = discord.utils.get(message.reactions, emoji='❌')
             
             if disapproval_reaction and disapproval_reaction.count > 1:
+                
+                await message.edit(content="❌ Disproved")
+                user = client.get_user(payload.user_id)
+                #await message.remove_reaction(payload.emoji.name, user)
+
                 unverifyResponse(img_id)
+
             elif approval_reaction and approval_reaction.count > 1:
+
+                await message.edit(content="✅ Verified")
+                user = client.get_user(payload.user_id)
+                #await message.remove_reaction(payload.emoji, user)
+
                 verifyResponse(img_id)
+        
 
 @client.event
 async def on_message(message):
@@ -103,21 +144,14 @@ async def on_message(message):
 
 
 
-async def sendImageToVerify(imagePath):
-    channel = client.get_channel(VERIFY_CHANNEL_ID)
-    
-    msg = await channel.send(file=discord.File(imagePath))
-    await msg.add_reaction('✅')
-    await msg.add_reaction('❌')
-
 
 async def saveImage(image, prompt, image_print_type):
     img_path = 'responses/'+str(saveResponseToDB(prompt, image_print_type))+'.png'
     image.save(img_path, 'PNG')
 
     channel = client.get_channel(VERIFY_CHANNEL_ID)
-    #await channel.send('test')
-    msg = await channel.send(file=discord.File(img_path))
+
+    msg = await channel.send(content="Awaiting Verification", file=discord.File(img_path))
     await msg.add_reaction('✅')
     await msg.add_reaction('❌')
 
@@ -148,10 +182,13 @@ def handle_add_ipad_response():
             img_base64 = data['image_base_64']
             prompt = data['prompt']
 
-            img = Image.open(BytesIO(base64.decodebytes(bytes(img_base64, "utf-8"))))
+            raw_img = Image.open(BytesIO(base64.decodebytes(bytes(img_base64, "utf-8"))))
+            img = Image.new("RGBA", raw_img.size, "WHITE") # Create a white rgba background
+            img.paste(raw_img, (0, 0), raw_img)              # Paste the image on the background. Go to the links given below for details.
 
+            '''
             img.thumbnail(thermal_printer_size)
-            img.save('my-image.png')
+            img.save('latest_raw_response.png')
 
             mod_img = Image.new("RGB", thermal_printer_size, (204, 255, 229))
             mod_img.paste(img, (0, 400))
@@ -164,8 +201,16 @@ def handle_add_ipad_response():
             text_x = (thermal_printer_size[0] - text_width) // 2  # Center text
             text_y = 20
             draw.text((text_x, text_y), prompt, fill=(0, 0, 0), font=font)
+            '''
+            img = ImageOps.expand(img, border=10, fill=(255,255,255))
+            draw = ImageDraw.Draw(img)
+            font = ImageFont.truetype("font.ttf", size=26)
 
-            client.loop.create_task(saveImage(mod_img, prompt, "thermal-printer"))
+            text_width, text_height = draw.textsize(prompt, font)
+            text_x = (img.width - text_width) // 2  # Center text
+            draw.text((text_x,0),prompt, fill=(0, 0, 0),font=font)
+
+            client.loop.create_task(saveImage(img, prompt, "thermal-printer"))
 
             return 'success'
         return 'failure'
@@ -194,8 +239,13 @@ def handle_add_qr_response():
  
 @app.route('/get_prompt', methods = ['GET'])
 def prompt_GET():
-    return current_prompt
+    with open('prompt.txt', 'r') as file:
+        current_prompt = file.read().replace('\n', '')
+    return jsonify({"prompt": current_prompt})
 
+@app.route('/frontend')
+def frontendHTML():
+    return render_template('index.html')
 
 def run_discord_bot_in_thread():
     # Important to make an event loop for the new thread
@@ -206,27 +256,22 @@ def run_discord_bot_in_thread():
 def print_button_listener():
     # Important to make an event loop for the new thread
     asyncio.set_event_loop(asyncio.new_event_loop())
-    print('a')
     button = Button(2)
-    print('b')
 
     subprocess.Popen(['sudo', 'rfcomm', 'connect', '0', '24:54:89:AE:0A:51'])
 
-    print('c')
     time.sleep(5)
-    print('d')
 
     while True:
 
-        print('e')
         button.wait_for_press()
 
-        print('f')
-        subprocess.Popen(['python', 'thermal-print.py', 'image.png', '>', '/dev/rfcomm0'])
+        with open('prompt.txt', 'r') as file:
+            current_prompt = file.read().replace('\n', '')
 
-        print('g')
+        os.system('python thermal-print.py '+printRandomImg(current_prompt)+' > /dev/rfcomm0')
+
         time.sleep(10)
-        print('h')
 
 
 

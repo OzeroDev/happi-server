@@ -52,6 +52,9 @@ ngrok http --url=mongoose-full-barely.ngrok-free.app 50298
 
 https://mongoose-full-barely.ngrok-free.app/
 
+
+python -m http.server 50299
+
 ### API Ussage
 
 #### add_ipad_response : POST

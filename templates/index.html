@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Pad</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #background-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+        h2 {
+            display: inline;
+            font-size: 24px;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 3px solid;
+            width: 50ch; /* Adjust to the character count of the text */
+            animation: typing 5s steps(43), cursor-blink 0.5s step-end infinite alternate;
+            animation-delay: 0s, 10s;
+            animation-iteration-count: infinite;
+            animation-fill-mode: forwards;
+        }
+        @keyframes typing {
+            0% { width: 0; }
+            50%, 100% { width: 50ch; }
+        }
+        @keyframes blink {
+            50% { border-color: transparent; }
+        }
+        #signature-pad {
+            border: 1px solid #000;
+            border-radius: 5px;
+            width: 75vw;
+            height: 50vh;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+        }
+        .button-container {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Video -->
+    <video id="background-video" autoplay loop muted>
+        <source src="static/video/backgroundVideo.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <h1>Welcome to Happy!
+
+    </h1>
+    <h2></h2>
+    <canvas id="signature-pad"></canvas>
+    <div class="button-container">
+        <button id="clear">Clear</button>
+        <button id="save">Spread Positivity (Send)</button>
+    </div>
+
+    <!-- Signature Pad Library -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+    <script>
+        const canvas = document.getElementById("signature-pad");
+        const signaturePad = new SignaturePad(canvas);
+
+        // Set canvas dimensions to 75% of the viewport width and 50% of the viewport height
+        function resizeCanvas() {
+            canvas.width = window.innerWidth * 0.75;
+            canvas.height = window.innerHeight * 0.5;
+            signaturePad.clear(); // Clear the canvas after resizing
+        }
+
+        // Initial canvas resize
+        resizeCanvas();
+
+        // Resize canvas on window resize
+        window.addEventListener("resize", resizeCanvas);
+
+        document.getElementById("clear").addEventListener("click", () => {
+            signaturePad.clear();
+        });
+
+        document.getElementById("save").addEventListener("click", () => {
+            if (signaturePad.isEmpty()) {
+                alert("Please provide a signature first.");
+            } else {
+                const base_64_img = signaturePad.toDataURL("image/png").split(';base64,')[1];
+                fetch('https://mongoose-full-barely.ngrok-free.app/add_ipad_response', {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                        "password": "wegojapan"
+                    },
+                    body: JSON.stringify({
+                        image_base_64:  base_64_img,
+                        prompt: document.querySelector('h2').innerText
+                    })
+                });
+                signaturePad.clear();
+            }
+        });
+
+
+        fetch('https://mongoose-full-barely.ngrok-free.app/get_prompt', {
+            method: "GET"
+        }).then(res => {
+            return res.json()
+        }).then(data => {
+            document.querySelector('h2').innerText = data.prompt
+        })
+    </script>
+</body>
+</html>
