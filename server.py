@@ -116,6 +116,10 @@ async def on_raw_reaction_add(payload):
                 await message.edit(content="❌ Disproved")
                 user = client.get_user(payload.user_id)
                 #await message.remove_reaction(payload.emoji.name, user)
+                for reaction in message.reactions:
+                    async for user in reaction.users():
+                        if not user.bot:
+                            await reaction.remove(user)
 
                 unverifyResponse(img_id)
 
@@ -124,6 +128,10 @@ async def on_raw_reaction_add(payload):
                 await message.edit(content="✅ Verified")
                 user = client.get_user(payload.user_id)
                 #await message.remove_reaction(payload.emoji, user)
+                for reaction in message.reactions:
+                    async for user in reaction.users():
+                        if not user.bot:
+                            await reaction.remove(user)
 
                 verifyResponse(img_id)
         
