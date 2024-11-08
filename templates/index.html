@@ -38,7 +38,7 @@
         }
         @keyframes typing {
             0% { width: 0; }
-            50%, 100% { width: 50ch; }
+            50%, 100% { width: 50ch; } /* width needs to be length - 2  */
         }
         @keyframes blink {
             50% { border-color: transparent; }
@@ -128,8 +128,30 @@
         }).then(res => {
             return res.json()
         }).then(data => {
-            document.querySelector('h2').innerText = data.prompt
-        })
+            document.querySelector('h2').innerText = data.prompt;
+            document.querySelector("h2").width = data.prompt.length;
+
+            //Setting key frames 
+            const existingKeyframes = document.getElementById("dynamic-typing-keyframes");
+            // Remove exisiting key frames
+            if (existingKeyframes) {
+                 existingKeyframes.remove();
+            }
+            
+            //typing keyframe needs to be -2 otherwise it goes a few steps after
+            const keyFramesTyping = document.createElement("style");
+            keyFramesTyping .id = "dynamic-typing-keyframes";
+            keyFramesTyping .innerHTML = `
+                @keyframes typing {
+                    0% { width: 0; }
+                    50%, 100% { width: ${data.prompt.length - 2}; }
+                    }`;
+            document.head.appendChild(keyFramesTyping);
+
+            //set animation
+            document.querySelector('h2').style.animation = `typing 5s steps(${data.prompt.length}), cursor-blink 0.5s step-end infinite alternate`;
+
+        });
     </script>
 </body>
 </html>
