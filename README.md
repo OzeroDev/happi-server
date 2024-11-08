@@ -36,21 +36,6 @@ bash commands:
 bluetoothctl pair 0C:86:29:61:9B:14
 obexftp --nopath --noconn --uuid none --bluetooth 0C:86:29:61:9B:14 --channel 2 -p color.png
 
-using ngork for free tunneling with permanent domain:
-ngrok http --url=mongoose-full-barely.ngrok-free.app 50298
-
-curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-	| sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-	&& echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
-	| sudo tee /etc/apt/sources.list.d/ngrok.list \
-	&& sudo apt update \
-	&& sudo apt install ngrok
-
-ngrok config add-authtoken 2oRkK1wgSOXSluBaBvt2il8Xedi_dPazXWyV1P4c5QZm3Mxc
-
-ngrok http --url=mongoose-full-barely.ngrok-free.app 50298
-
-https://mongoose-full-barely.ngrok-free.app/
 
 
 python -m http.server 50299
