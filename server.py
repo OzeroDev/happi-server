@@ -3,15 +3,16 @@ import discord.message
 from flask import Flask, request, json, render_template, jsonify
 import base64
 from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageTk
 from dotenv import load_dotenv
 import os
 import discord
 import asyncio
 from threading import Thread
 import sqlite3
-from gpiozero import Button
 import subprocess
+import tkinter as tk
+import cv2
 import time
 
 current_prompt = ''
@@ -76,15 +77,13 @@ def printRandomImg(prompt):
     
 
 
-
-
 # Discord bot 
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
-VERIFY_CHANNEL_ID = 1303107546164363286
-PROMPT_CHANNEL_ID = 1304147149574901800
-SERVER_CHANNEL_ID = 1304146632085868647
+VERIFY_CHANNEL_ID = 1305668137408008252
+PROMPT_CHANNEL_ID = 1305668162091618345
+SERVER_CHANNEL_ID = 1305668190935847003
 
 
 
@@ -145,7 +144,7 @@ async def on_message(message):
             file.write(current_prompt)
         
         channel = client.get_channel(PROMPT_CHANNEL_ID)
-        await channel.send('Current Prompt:\n'+current_prompt)
+        await channel.send('The current prompt is now:\n'+current_prompt)
 
         
         
@@ -194,29 +193,37 @@ def handle_add_ipad_response():
             img = Image.new("RGBA", raw_img.size, "WHITE") # Create a white rgba background
             img.paste(raw_img, (0, 0), raw_img)              # Paste the image on the background. Go to the links given below for details.
 
-            '''
-            img.thumbnail(thermal_printer_size)
-            img.save('latest_raw_response.png')
-
-            mod_img = Image.new("RGB", thermal_printer_size, (204, 255, 229))
-            mod_img.paste(img, (0, 400))
-            
-            # 650
-            draw = ImageDraw.Draw(mod_img)
-
-            font = ImageFont.truetype("font.ttf", size=40)
-            text_width, text_height = draw.textsize(prompt, font)
-            text_x = (thermal_printer_size[0] - text_width) // 2  # Center text
-            text_y = 20
-            draw.text((text_x, text_y), prompt, fill=(0, 0, 0), font=font)
-            '''
-            img = ImageOps.expand(img, border=10, fill=(255,255,255))
+            img = ImageOps.expand(img, border=(0,70,0,0), fill=(255,255,255))
             draw = ImageDraw.Draw(img)
             font = ImageFont.truetype("font.ttf", size=26)
 
-            text_width, text_height = draw.textsize(prompt, font)
+            text_width = draw.textlength(prompt, font)
             text_x = (img.width - text_width) // 2  # Center text
-            draw.text((text_x,0),prompt, fill=(0, 0, 0),font=font)
+            draw.text((text_x,10),prompt, fill=(0, 0, 0),font=font)
+
+            # adding
+
+            width, height = img.size # aspect is 
+
+            if (width/height)>(3/2):
+                # find height diff to make it be 5/4
+                height_d = (width/1.25)-height
+
+                height_border = int(height_d/2) #size of height to add
+
+                border_img = Image.open('goldy.png')
+                border_img = border_img.resize((height_border, height_border), Image.Resampling.LANCZOS)
+
+                img = ImageOps.expand(img, border=(0,height_border,0,height_border), fill=(255,255,255))
+
+                row_count = width // height_border
+
+                offset = int(((width)-(row_count*height_border))/2)
+
+                for i in range(row_count):
+                    img.paste(border_img, (offset+(i*height_border),0))
+                    img.paste(border_img, (offset+(i*height_border),height+height_border))
+
 
             client.loop.create_task(saveImage(img, prompt, "thermal-printer"))
 
@@ -224,7 +231,7 @@ def handle_add_ipad_response():
         return 'failure'
     
     
-    
+'''
 # add_qr_response POST request
 @app.route('/add_qr_response', methods = ['POST'])
 def handle_add_qr_response():
@@ -242,6 +249,15 @@ def handle_add_qr_response():
 
             return 'success'
         return 'failure'
+'''   
+
+@app.route('/print_response', methods = ['POST'])
+def handle_print_response():
+    with open('prompt.txt', 'r') as file:
+        current_prompt = file.read().replace('\n', '')
+
+    os.system('python thermal-print.py '+printRandomImg(current_prompt)+' > /dev/rfcomm0')
+    return 'success'
     
 
  
@@ -260,36 +276,93 @@ def run_discord_bot_in_thread():
     asyncio.set_event_loop(asyncio.new_event_loop())
     client.run(DISCORD_TOKEN)
 
-
-def print_button_listener():
+def connect_to_printer():
     # Important to make an event loop for the new thread
     asyncio.set_event_loop(asyncio.new_event_loop())
-    button = Button(2)
 
     subprocess.Popen(['sudo', 'rfcomm', 'connect', '0', '24:54:89:AE:0A:51'])
 
-    time.sleep(5)
+frame_index = 0
 
-    while True:
+frame_count = 300
+text = ''
 
-        button.wait_for_press()
+def display_thread():
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
+    # Display
+
+    def updateText():
+        global text
         with open('prompt.txt', 'r') as file:
-            current_prompt = file.read().replace('\n', '')
-
-        os.system('python thermal-print.py '+printRandomImg(current_prompt)+' > /dev/rfcomm0')
-
-        time.sleep(10)
+            text = file.read().replace('\n', '')
 
 
+    def play_video():
+        global frame_index, frame_count, text
+        
+        if frame_count > 300:
+            updateText()
+            frame_count = 0
+        else:
+            frame_count=frame_count+1
 
+        ret, frame = cap.read()
+        if not ret:
+            frame_index = 0
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            ret, frame = cap.read()
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+
+        # Resize the frame to the screen size
+        frame = cv2.resize(frame, (screen_width, screen_height))
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        textsize = cv2.getTextSize(text, font, 1.8, 2)[0]
+        cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 1.8, (255, 255, 255), 2)
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(frame)
+        img = ImageTk.PhotoImage(img)
+        label.config(image=img)
+        label.image = img
+
+        root.after(1, play_video)
+
+
+    root = tk.Tk()
+    root.attributes('-fullscreen', True)
+    root.config(background = "#000000")
+    root.title("Happi Display")
+
+    cap = cv2.VideoCapture("blink.mp4")  # Replace with your video file
+
+    label = tk.Label(root)
+    label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
+
+
+    play_video()
+
+    root.mainloop()
     
 
 
 if __name__ == '__main__':
+    status = 'Not connected'
+    while status == 'Not connected':
+        response = os.system("ping -c 1 8.8.8.8")
+        if response == 0:
+            print('Connected to the Internet')
+            status = 'Connected'
+        else:
+            print('Not connected to the Internet')
+        time.sleep(2)
+
     staticUrl = subprocess.Popen(['ngrok', 'http', '--url=mongoose-full-barely.ngrok-free.app', '50298'])
     Thread(target=run_discord_bot_in_thread, daemon=True).start()
-    Thread(target=print_button_listener, daemon=True).start()
+    Thread(target=connect_to_printer, daemon=True).start()
+    Thread(target=display_thread, daemon=True).start()
 
     app.run(host='0.0.0.0', port=50298, debug=False) 
 

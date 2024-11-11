@@ -25,23 +25,27 @@
             z-index: -1;
         }
         h2 {
-            display: inline;
+            width: 0;
+            margin-left: auto;
+            margin-right: auto;
             font-size: 24px;
             white-space: nowrap;
             overflow: hidden;
             border-right: 3px solid;
-            width: 50ch; /* Adjust to the character count of the text */
-            animation: typing 5s steps(43), cursor-blink 0.5s step-end infinite alternate;
-            animation-delay: 0s, 10s;
-            animation-iteration-count: infinite;
-            animation-fill-mode: forwards;
+            /*width: 50ch; /* Adjust to the character count of the text */
+            animation: typing 10s steps(40, end) forwards infinite, blinking 0.4s step-end infinite alternate;
         }
         @keyframes typing {
-            0% { width: 0; }
-            50%, 100% { width: 50ch; } /* width needs to be length - 2  */
+            0% { width: 0 }
+            30% { width: 100% }
+            100% { width: 100% }
         }
-        @keyframes blink {
+        @keyframes blinking {
             50% { border-color: transparent; }
+        }
+        .typing-container{
+            display: inline-block;
+            text-align: center;
         }
         #signature-pad {
             border: 1px solid #000;
@@ -70,11 +74,14 @@
     <h1>Welcome to Happy!
 
     </h1>
-    <h2></h2>
+    <div class="typing-container">
+        <h2></h2>
+    </div>
     <canvas id="signature-pad"></canvas>
     <div class="button-container">
         <button id="clear">Clear</button>
         <button id="save">Spread Positivity (Send)</button>
+        <button id="print">Print a Message!</button>
     </div>
 
     <!-- Signature Pad Library -->
@@ -129,29 +136,22 @@
             return res.json()
         }).then(data => {
             document.querySelector('h2').innerText = data.prompt;
-            document.querySelector("h2").width = data.prompt.length;
-
-            //Setting key frames 
-            const existingKeyframes = document.getElementById("dynamic-typing-keyframes");
-            // Remove exisiting key frames
-            if (existingKeyframes) {
-                 existingKeyframes.remove();
-            }
-            
-            //typing keyframe needs to be -2 otherwise it goes a few steps after
-            const keyFramesTyping = document.createElement("style");
-            keyFramesTyping .id = "dynamic-typing-keyframes";
-            keyFramesTyping .innerHTML = `
-                @keyframes typing {
-                    0% { width: 0; }
-                    50%, 100% { width: ${data.prompt.length - 2}; }
-                    }`;
-            document.head.appendChild(keyFramesTyping);
-
-            //set animation
-            document.querySelector('h2').style.animation = `typing 5s steps(${data.prompt.length}), cursor-blink 0.5s step-end infinite alternate`;
-
         });
+
+
+        //Print
+        document.getElementById("print").addEventListener("click", () => {
+            fetch('https://mongoose-full-barely.ngrok-free.app/print_response', {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "password": "wegojapan"
+                }
+            });
+            signaturePad.clear();
+        });
+
     </script>
 </body>
 </html>

@@ -8,6 +8,12 @@
 - *pip install python-dotenv*
 - *pip install gpiozero*
 - *sudo apt install sqlite3*
+sudo apt-get install python3-tk
+pip install opencv-python
+
+
+pip install tkvideoplayer
+
 
 raspberry pi pip installation guide:
 python -m venv ~/py_envs
