@@ -301,7 +301,7 @@ def display_thread():
     def play_video():
         global frame_index, frame_count, text
         
-        if frame_count > 500:
+        if frame_count > 800:
             updateText()
             frame_count = 0
         else:
@@ -320,8 +320,8 @@ def display_thread():
 
         if frame_count < 150:
             font = cv2.FONT_HERSHEY_SIMPLEX
-            textsize = cv2.getTextSize(text, font, 1.8, 2)[0]
-            cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 1.8, (255, 255, 255), 2)
+            textsize = cv2.getTextSize(text, font, 1, 2)[0]
+            cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 1, (255, 255, 255), 2)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
@@ -329,7 +329,7 @@ def display_thread():
         label.config(image=img)
         label.image = img
 
-        root.after(10, play_video)
+        root.after(2, play_video)
 
 
     root = tk.Tk()
