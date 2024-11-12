@@ -301,7 +301,7 @@ def display_thread():
     def play_video():
         global frame_index, frame_count, text
         
-        if frame_count > 800:
+        if frame_count >= 800:
             updateText()
             frame_count = 0
         else:
@@ -329,7 +329,7 @@ def display_thread():
         label.config(image=img)
         label.image = img
 
-        root.after(1, play_video)
+        root.after(20, play_video)
 
 
     root = tk.Tk()
@@ -344,7 +344,7 @@ def display_thread():
     label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
 
 
-    play_video()
+    root.after(play_video, 60)
 
     root.mainloop()
     
