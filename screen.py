@@ -55,7 +55,7 @@ root.attributes("-type", "splash")
 root.config(background = "#000000")
 root.title("Happi Display")
 
-cap = cv2.VideoCapture("blink.mp4")  # Replace with your video file
+cap = cv2.VideoCapture("~/Desktop/happi-server/blink.mp4")  # Replace with your video file
 
 label = tk.Label(root)
 label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
