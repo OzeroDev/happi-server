@@ -51,6 +51,7 @@ def printRandomImg(prompt):
         SELECT id, printedCount
         FROM responses
         WHERE prompt = ?
+            AND verified = 1
         ORDER BY printedCount ASC, id ASC
         LIMIT 1
     """, (prompt,))
