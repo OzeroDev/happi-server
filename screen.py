@@ -29,7 +29,7 @@ def play_video():
     
     if not ret:
         frame_index = 0
-        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        cap.set( 0)
         ret, frame = cap.read()
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
@@ -63,6 +63,6 @@ label = tk.Label(root)
 label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
 
 
-play_video()
+root.after(30, play_video)
 
 root.mainloop()
