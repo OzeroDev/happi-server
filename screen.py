@@ -61,6 +61,6 @@ label = tk.Label(root)
 label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
 
 
-play_video()
+# play_video()
 
 root.mainloop()
