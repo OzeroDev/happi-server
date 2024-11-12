@@ -17,35 +17,41 @@ def updateText():
 
 def play_video():
     global frame_index, frame_count, text
-    
+    print('a')
     if frame_count >= 800:
         updateText()
         frame_count = 0
     else:
         frame_count=frame_count+1
 
+    print('b')
     ret, frame = cap.read()
+    print('c')
     if not ret:
         frame_index = 0
         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         ret, frame = cap.read()
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
+    print('d')
 
     # Resize the frame to the screen size
     frame = cv2.resize(frame, (screen_width, screen_height))
 
+    print('e')
     if frame_count < 200:
         font = cv2.FONT_HERSHEY_SIMPLEX
         textsize = cv2.getTextSize(text, font, 0.8, 2)[0]
         cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 0.8, (255, 255, 255), 2)
 
+    print('f')
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     img = Image.fromarray(frame)
     img = ImageTk.PhotoImage(img)
     label.config(image=img)
     label.image = img
 
+    print('g')
     root.after(1, play_video)
 
 
@@ -55,7 +61,7 @@ root.attributes("-type", "splash")
 root.config(background = "#000000")
 root.title("Happi Display")
 
-cap = cv2.VideoCapture("~/Desktop/happi-server/blink.mp4")  # Replace with your video file
+cap = cv2.VideoCapture("blink.mp4")  # Replace with your video file
 
 label = tk.Label(root)
 label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
