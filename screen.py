@@ -29,18 +29,13 @@ def play_video():
     
     if not ret:
         frame_index = 0
-        cap.set( 0)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         ret, frame = cap.read()
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
 
     # Resize the frame to the screen size
     frame = cv2.resize(frame, (screen_width, screen_height))
-
-    if frame_count < 200:
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        textsize = cv2.getTextSize(text, font, 0.8, 2)[0]
-        cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 0.8, (255, 255, 255), 2)
 
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     img = Image.fromarray(frame)
