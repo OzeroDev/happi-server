@@ -29,7 +29,9 @@ bash commands:
 bluetoothctl devices
 bluetoothctl pair 24:54:89:AE:0A:51
 sudo rfcomm connect 0 24:54:89:AE:0A:51
+
 sudo chmod a+rw /dev/rfcomm0
+
 thermal-print.py my-image.png > /dev/rfcomm0
 
 ### color printer instructions
