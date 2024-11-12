@@ -55,7 +55,7 @@ def play_video():
 
 
 
-cap = cv2.VideoCapture("blink.mp4")  # Replace with your video file
+cap = cv2.VideoCapture("test.mp4")  # Replace with your video file
 
 label = tk.Label(root)
 label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
