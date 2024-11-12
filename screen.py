@@ -41,7 +41,7 @@ def play_video():
         font = cv2.FONT_HERSHEY_SIMPLEX
         textsize = cv2.getTextSize(text, font, 0.8, 2)[0]
         cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 0.8, (255, 255, 255), 2)
-
+    text=str(frame_count)
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     img = Image.fromarray(frame)
     img = ImageTk.PhotoImage(img)
