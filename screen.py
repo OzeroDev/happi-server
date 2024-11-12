@@ -48,7 +48,7 @@ def play_video():
     label.config(image=img)
     label.image = img
 
-    root.after(30, play_video)
+    root.after(10, play_video)
 
 
 root = tk.Tk()
