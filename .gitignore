@@ -4,4 +4,8 @@ __pycache__
 
 responses.db
 
-./responses
+# exclude everything
+responses/*
+
+# exception to the rule
+!responses/.gitkeep 
