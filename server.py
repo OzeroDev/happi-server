@@ -284,7 +284,7 @@ def connect_to_printer():
 
 frame_index = 0
 
-frame_count = 300
+frame_count = 800
 text = ''
 
 def display_thread():
@@ -318,10 +318,10 @@ def display_thread():
         # Resize the frame to the screen size
         frame = cv2.resize(frame, (screen_width, screen_height))
 
-        if frame_count < 150:
+        if frame_count < 200:
             font = cv2.FONT_HERSHEY_SIMPLEX
-            textsize = cv2.getTextSize(text, font, 1, 2)[0]
-            cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 1, (255, 255, 255), 2)
+            textsize = cv2.getTextSize(text, font, 0.8, 2)[0]
+            cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 0.8, (255, 255, 255), 2)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
@@ -329,11 +329,12 @@ def display_thread():
         label.config(image=img)
         label.image = img
 
-        root.after(2, play_video)
+        root.after(1, play_video)
 
 
     root = tk.Tk()
     root.attributes('-fullscreen', True)
+    root.attributes("-type", "splash")
     root.config(background = "#000000")
     root.title("Happi Display")
 
