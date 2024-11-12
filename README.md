@@ -23,6 +23,8 @@ python -m pip install NAMEOFWHATEVER
 ### phomemo printer instructions
 24:54:89:AE:0A:51
 
+alt-f4
+
 bash commands:
 bluetoothctl devices
 bluetoothctl pair 24:54:89:AE:0A:51
