@@ -1,6 +1,12 @@
 
 import tkinter as tk
 import cv2
+from PIL import Image, ImageTk
+
+frame_index = 0
+
+frame_count = 800
+text = 'asdfasdfasdf'
 
 def updateText():
     global text
