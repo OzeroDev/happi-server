@@ -289,7 +289,7 @@ text = ''
 
 def display_thread():
     asyncio.set_event_loop(asyncio.new_event_loop())
-    time.sleep(5)
+    time.sleep(2)
     # Display
 
     def updateText():
