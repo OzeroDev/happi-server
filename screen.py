@@ -3,16 +3,11 @@ import tkinter as tk
 import cv2
 from PIL import Image, ImageTk
 
-root = tk.Tk()
-root.attributes('-fullscreen', True)
-root.attributes("-type", "splash")
-root.config(background = "#000000")
-root.title("Happi Display")
 
 frame_index = 0
 
 frame_count = 800
-text = 'asdfasdfasdf'
+text = ''
 
 def updateText():
     global text
@@ -23,7 +18,7 @@ def updateText():
 def play_video():
     global frame_index, frame_count, text
     
-    if frame_count > 800:
+    if frame_count >= 800:
         updateText()
         frame_count = 0
     else:
@@ -51,16 +46,21 @@ def play_video():
     label.config(image=img)
     label.image = img
 
-    root.after(2, play_video)
+    root.after(1, play_video)
 
 
+root = tk.Tk()
+root.attributes('-fullscreen', True)
+root.attributes("-type", "splash")
+root.config(background = "#000000")
+root.title("Happi Display")
 
-cap = cv2.VideoCapture("test.mp4")  # Replace with your video file
+cap = cv2.VideoCapture("blink.mp4")  # Replace with your video file
 
 label = tk.Label(root)
 label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
 
 
-# play_video()
+play_video()
 
 root.mainloop()
