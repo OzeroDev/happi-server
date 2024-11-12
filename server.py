@@ -283,7 +283,7 @@ def connect_to_printer():
 
 frame_index = 0
 
-frame_count = 800
+frame_count = 600
 text = ''
 
 def display_thread():
@@ -300,7 +300,7 @@ def display_thread():
     def play_video():
         global frame_index, frame_count, text
         
-        if frame_count >= 800:
+        if frame_count >= 600:
             updateText()
             frame_count = 0
         else:
@@ -343,9 +343,9 @@ def display_thread():
     label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
 
 
-    #root.after(60, play_video)
+    root.after(60, play_video)
 
-    #root.mainloop()
+    root.mainloop()
     
 
 
