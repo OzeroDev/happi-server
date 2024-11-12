@@ -86,7 +86,6 @@ PROMPT_CHANNEL_ID = 1305668162091618345
 SERVER_CHANNEL_ID = 1305668190935847003
 
 
-
 class Client(discord.Client):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
@@ -344,9 +343,9 @@ def display_thread():
     label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
 
 
-    root.after(60, play_video)
+    #root.after(60, play_video)
 
-    root.mainloop()
+    #root.mainloop()
     
 
 
