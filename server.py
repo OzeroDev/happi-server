@@ -344,7 +344,7 @@ def display_thread():
     label.pack(fill=tk.BOTH, expand=True)  # This makes the label expand to fill the window
 
 
-    root.after(play_video, 60)
+    root.after(60, play_video)
 
     root.mainloop()
     
