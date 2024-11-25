@@ -1,6 +1,7 @@
 import discord.client
 import discord.message
 from flask import Flask, request, json, render_template, jsonify
+from flask_cors import CORS
 import base64
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageTk
@@ -14,6 +15,15 @@ import subprocess
 import tkinter as tk
 import cv2
 import time
+import requests
+
+
+load_dotenv()
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+VERIFY_CHANNEL_ID = 1305668137408008252
+PROMPT_CHANNEL_ID = 1305668162091618345
+SERVER_CHANNEL_ID = 1305668190935847003
+COLOR_PRINT_CHANNEL_ID = 1310582694723190834
 
 current_prompt = ''
 
@@ -45,10 +55,23 @@ def unverifyResponse(res_id):
     con.commit()
 
 
+def logEvent(eType):
+    try:
+        requests.post("https://brief-uniformly-drum.ngrok-free.app/event", data={"event_type": eType}, timeout=(None, 0.00001))
+    except requests.exceptions.ReadTimeout:
+        pass
+
+
+async def colorPrintToDiscord(img_path):
+    channel = client.get_channel(COLOR_PRINT_CHANNEL_ID)
+
+    msg = await channel.send(content="Print this on color printer:", file=discord.File(img_path))
+
+
 def printRandomImg(prompt):
 
     cur.execute("""
-        SELECT id, printedCount
+        SELECT id, printedCount, type
         FROM responses
         WHERE prompt = ?
             AND verified = 1
@@ -61,7 +84,7 @@ def printRandomImg(prompt):
     result = cur.fetchone()
 
     if result:
-        response_id, printedCount = result
+        response_id, printedCount, type = result
         # Increment the printedCount value by 1
         cur.execute("""
             UPDATE responses
@@ -71,7 +94,13 @@ def printRandomImg(prompt):
         
         # Commit the changes to the database
         con.commit()
+
+        if type == "color-printer":
+            client.loop.create_task(colorPrintToDiscord("responses/"+str(response_id)+".png"))
+            logEvent("color-print")
+            return ""
         
+        logEvent("thermal-print")
         return "responses/"+str(response_id)+".png"
     else:
         return "no-responses.png"
@@ -79,13 +108,6 @@ def printRandomImg(prompt):
 
 
 # Discord bot 
-
-load_dotenv()
-DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
-VERIFY_CHANNEL_ID = 1305668137408008252
-PROMPT_CHANNEL_ID = 1305668162091618345
-SERVER_CHANNEL_ID = 1305668190935847003
-
 
 class Client(discord.Client):
     async def on_ready(self):
@@ -175,6 +197,7 @@ async def getPrompt():
 
 
 app = Flask(__name__)
+CORS(app)
 
 thermal_printer_size = (818, 1258)
 photo_printer_size = (818, 1258)
@@ -231,32 +254,48 @@ def handle_add_ipad_response():
         return 'failure'
     
     
-'''
+
 # add_qr_response POST request
 @app.route('/add_qr_response', methods = ['POST'])
 def handle_add_qr_response():
     if request.method == 'POST':
-        if request.headers['password'] == 'wegojapan':
-            data = json.loads(request.data)
-        
-            img_base64 = data['image_base_64']
-            img = Image.open(BytesIO(base64.decodebytes(bytes(img_base64, "utf-8"))))
-            img.save('my-image.png')
+        data = json.loads(request.data)
+    
+        response_img = data['image']
+        response_txt = data['text']
+        prompt = data['prompt']
 
-            text_response = data['image_base64']
+        raw_img = Image.open(BytesIO(base64.decodebytes(bytes(response_img, "utf-8"))))
+        img = Image.new("RGBA", raw_img.size, "WHITE") # Create a white rgba background
+        img.paste(raw_img, (0, 0), raw_img)              # Paste the image on the background. Go to the links given below for details.
 
-            prompt = data['prompt']
+        img = ImageOps.expand(img, border=(0,70,0,0), fill=(255,255,255))
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype("font.ttf", size=26)
 
-            return 'success'
-        return 'failure'
-'''   
+        text_width = draw.textlength(prompt, font)
+        text_x = (img.width - text_width) // 2  # Center text
+        draw.text((text_x,10),prompt, fill=(0, 0, 0),font=font)
+
+
+        img.save('z.png')
+
+
+        return 'success'
+    return 'failure'
+
 
 @app.route('/print_response', methods = ['POST'])
 def handle_print_response():
     with open('prompt.txt', 'r') as file:
         current_prompt = file.read().replace('\n', '')
 
-    os.system('python thermal-print.py '+printRandomImg(current_prompt)+' > /dev/rfcomm0')
+    toPrintImgPath = printRandomImg(current_prompt)
+
+    if toPrintImgPath == "":
+        return 'success'
+
+    os.system('python thermal-print.py '+toPrintImgPath+' > /dev/rfcomm0')
     return 'success'
     
 
@@ -284,29 +323,15 @@ def connect_to_printer():
 
 frame_index = 0
 
-frame_count = 600
-text = ''
 
 def display_thread():
     asyncio.set_event_loop(asyncio.new_event_loop())
     time.sleep(2)
     # Display
 
-    def updateText():
-        global text
-        with open('prompt.txt', 'r') as file:
-            text = file.read().replace('\n', '')
-
-
     def play_video():
-        global frame_index, frame_count, text
+        global frame_index
         
-        if frame_count >= 600:
-            updateText()
-            frame_count = 0
-        else:
-            frame_count=frame_count+1
-
         ret, frame = cap.read()
         if not ret:
             frame_index = 0
@@ -317,11 +342,6 @@ def display_thread():
 
         # Resize the frame to the screen size
         frame = cv2.resize(frame, (screen_width, screen_height))
-
-        if frame_count < 200:
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            textsize = cv2.getTextSize(text, font, 0.8, 2)[0]
-            cv2.putText(frame, text, ((screen_width//2)-(textsize[0]//2), screen_height//8), font, 0.8, (255, 255, 255), 2)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
@@ -351,6 +371,7 @@ def display_thread():
 
 
 if __name__ == '__main__':
+
     status = 'Not connected'
     while status == 'Not connected':
         response = os.system("ping -c 1 8.8.8.8")

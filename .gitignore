@@ -9,3 +9,5 @@ responses/*
 
 # exception to the rule
 !responses/.gitkeep 
+
+prompt.txt

@@ -65,12 +65,84 @@
             font-size: 16px;
             cursor: pointer;
         }
+
+        #print {
+            background-color: #04AA6D; /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .qr-img {
+            width: 40%;
+            margin: 40px;
+            margin-top: 0px;
+        }
+
+        .modal-content-div{
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+        }
+
+        h3{
+            margin-bottom: 0px;
+        }
     </style>
 </head>
 <body>
     <!-- Background Video -->
     <video id="background-video" autoplay loop muted>
-        <source src="static/video/backgroundVideo.mp4" type="video/mp4">
+        <source src="../static/video/backgroundVideo.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
     <h1>Welcome to HAPPI!
@@ -81,9 +153,25 @@
     </div>
     <canvas id="signature-pad"></canvas>
     <div class="button-container">
+        <button id="qr">Upload Text & Image Response</button>
         <button id="clear">Clear</button>
         <button id="save">Spread Positivity (Send)</button>
-        <button id="print">Print a Message!</button>
+    </div>
+    <button id="print">Print a Message!</button>
+
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-content-div">
+                <h3>Scan QR code to upload your text and image response:</h3>
+                <img class="qr-img" src="../static/picture/qr.png" alt="QR Code">
+            </div>
+        </div>
+    
     </div>
 
     <!-- Signature Pad Library -->
@@ -127,6 +215,13 @@
                         prompt: document.querySelector('h2').innerText
                     })
                 });
+                fetch('https://brief-uniformly-drum.ngrok-free.app/event', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({event_type: "submit"}),
+                })
                 signaturePad.clear();
             }
         });
@@ -151,8 +246,38 @@
                     "password": "wegojapan"
                 }
             });
-            signaturePad.clear();
+            //signaturePad.clear();
         });
+
+
+
+        //modal code
+
+        // Get the modal
+        var modal = document.getElementById("myModal");
+
+        // Get the button that opens the modal
+        var btn = document.getElementById("qr");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks the button, open the modal 
+        btn.onclick = function() {
+        modal.style.display = "block";
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+        modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+        }
 
     </script>
 </body>

@@ -41,6 +41,8 @@ sudo apt-get install bluetooth libbluetooth-dev
 sudo pip install pybluez
 sudo apt-get install obexftp
 
+pip install flask-cors
+
 
 bash commands:
 bluetoothctl pair 0C:86:29:61:9B:14
