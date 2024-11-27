@@ -66,17 +66,51 @@
             cursor: pointer;
         }
 
-        #print {
-            background-color: #04AA6D; /* Green */
-            border: none;
-            color: white;
-            padding: 15px 32px;
+        #qr {
+            background-color: whitesmoke; /* Blue */
+            border-width: 1px;
+            color: black;
+            padding: 10px 20px;
             text-align: center;
             text-decoration: none;
             display: inline-block;
             font-size: 16px;
             border-radius: 8px;
-            margin-top: 30px;
+        }
+        #clear {
+            background-color: whitesmoke; /* Blue */
+            border-width: 1px;
+            color: black;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        #save {
+            background-color: #0073ff; /* Blue */
+            border-width: 1px;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        #print {
+            background-color: #04AA6D; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 8px;
         }
 
 
@@ -137,6 +171,28 @@
         h3{
             margin-bottom: 0px;
         }
+
+        .not-selectable {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .flex {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 75vw;
+            height: min-content;
+        } 
+        .btn {
+            margin-top: 10px;
+            align-self: flex-start;
+        }
     </style>
 </head>
 <body>
@@ -145,19 +201,21 @@
         <source src="../static/video/backgroundVideo.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
-    <h1>Welcome to HAPPI!
+    <h1 class="not-selectable">Welcome to HAPPI!
 
     </h1>
     <div class="typing-container">
-        <h2></h2>
+        <h2 class="not-selectable"></h2>
     </div>
     <canvas id="signature-pad"></canvas>
-    <div class="button-container">
-        <button id="qr">Upload Text & Image Response</button>
-        <button id="clear">Clear</button>
-        <button id="save">Spread Positivity (Send)</button>
+    <div class="button-container not-selectable flex">
+        <button class="not-selectable btn" id="qr">Upload a Text/Image Response</button>
+        <button class="not-selectable btn" id="print">Print a Random Response!</button>
+        <div>
+            <button class="not-selectable btn" id="clear">Clear</button>
+            <button class="not-selectable btn" id="save">Submit Response</button>
+        </div>
     </div>
-    <button id="print">Print a Message!</button>
 
 
     <!-- The Modal -->
@@ -167,7 +225,7 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <div class="modal-content-div">
-                <h3>Scan QR code to upload your text and image response:</h3>
+                <h3>Scan QR code to upload your response as text or image:</h3>
                 <img class="qr-img" src="../static/picture/qr.png" alt="QR Code">
             </div>
         </div>
@@ -245,6 +303,8 @@
                     "Content-Type": "application/json",
                     "password": "wegojapan"
                 }
+            }).then(() => {
+                alert("A response is being printed.");
             });
             //signaturePad.clear();
         });

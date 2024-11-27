@@ -12,8 +12,8 @@ import asyncio
 from threading import Thread
 import sqlite3
 import subprocess
-import tkinter as tk
-import cv2
+# import tkinter as tk
+# import cv2
 import time
 import requests
 
@@ -97,10 +97,8 @@ def printRandomImg(prompt):
 
         if type == "color-printer":
             client.loop.create_task(colorPrintToDiscord("responses/"+str(response_id)+".png"))
-            logEvent("color-print")
             return ""
         
-        logEvent("thermal-print")
         return "responses/"+str(response_id)+".png"
     else:
         return "no-responses.png"
@@ -259,29 +257,312 @@ def handle_add_ipad_response():
 @app.route('/add_qr_response', methods = ['POST'])
 def handle_add_qr_response():
     if request.method == 'POST':
-        data = json.loads(request.data)
-    
-        response_img = data['image']
-        response_txt = data['text']
-        prompt = data['prompt']
-
-        raw_img = Image.open(BytesIO(base64.decodebytes(bytes(response_img, "utf-8"))))
-        img = Image.new("RGBA", raw_img.size, "WHITE") # Create a white rgba background
-        img.paste(raw_img, (0, 0), raw_img)              # Paste the image on the background. Go to the links given below for details.
-
-        img = ImageOps.expand(img, border=(0,70,0,0), fill=(255,255,255))
-        draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype("font.ttf", size=26)
-
-        text_width = draw.textlength(prompt, font)
-        text_x = (img.width - text_width) // 2  # Center text
-        draw.text((text_x,10),prompt, fill=(0, 0, 0),font=font)
+        if request.headers['dtype'] == 'img':
+            data = json.loads(request.data)
+        
+            response_img = data['image']
+            prompt = data['prompt']
+            text = prompt
+            raw_img = Image.open(BytesIO(base64.decodebytes(bytes(response_img, "utf-8")))).convert("RGBA")
 
 
-        img.save('z.png')
+
+            img = Image.new("RGBA", raw_img.size, "WHITE") # Create a white rgba background
+            img.paste(raw_img, (0, 0), raw_img)              # Paste the image on the background. Go to the links given below for details.
+
+            img = ImageOps.expand(img, border=(0,100,0,0), fill=(255,255,255))
+            draw = ImageDraw.Draw(img)
 
 
-        return 'success'
+            max_font_size = 75
+            font_path = "font.ttf"
+            font = ImageFont.truetype(font_path, max_font_size)
+
+
+            width, height = img.size # aspect is 
+
+            # Function to check if the text fits within the given width and height
+            def text_fits(font, text, max_width, max_height):
+                lines = text.split('\n')
+                total_height = 0
+                max_line_width = 0
+                
+                for line in lines:
+                    # Use textbbox() to calculate the bounding box of the text
+                    bbox = draw.textbbox((0, 0), line, font=font)
+                    line_width = bbox[2] - bbox[0]  # width of the text
+                    line_height = bbox[3] - bbox[1]  # height of the text
+                    max_line_width = max(max_line_width, line_width)
+                    total_height += line_height
+                
+                return max_line_width <= max_width and total_height <= max_height
+            
+            # Start with the max font size and reduce until text fits
+            font_size = max_font_size
+            while font_size > 1:
+                font = ImageFont.truetype(font_path, font_size)
+                
+                # Check if the text fits within the image bounds
+                if text_fits(font, text, width-20, 70):
+                    break
+                
+                font_size -= 1
+            
+            # Now we have the maximum font size that fits within the bounds, calculate the wrapping
+            lines = text.split('\n')
+            total_text_height = 0
+            line_heights = []
+            
+            # Calculate total height of all lines and individual line heights
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_height = bbox[3] - bbox[1]
+                total_text_height += line_height
+                line_heights.append(line_height)
+            
+            # Calculate position to center the text
+            y_offset = (70 - total_text_height) // 2
+            for i, line in enumerate(lines):
+                # Get the bounding box of the line to center it horizontally
+                bbox = draw.textbbox((0, 0), line, font=font)
+                text_width = bbox[2] - bbox[0]
+                x_offset = (width - text_width) // 2  # Center the text horizontally
+                draw.text((x_offset, y_offset), line, font=font, fill="black")
+                y_offset += line_heights[i]  # Move to the next line
+            
+
+            client.loop.create_task(saveImage(img, prompt, "color-printer"))
+
+            return jsonify(res='success')
+        elif request.headers['dtype'] == 'text':
+            data = json.loads(request.data)
+        
+            text = data['text']
+            prompt = data['prompt']
+
+            img = Image.new("RGBA", (900, 400), "WHITE")
+            
+
+            width, height = img.size
+            draw = ImageDraw.Draw(img)
+            
+            # img = ImageOps.expand(img, border=(0,70,0,0), fill=(255,255,255))
+            font = ImageFont.truetype("font.ttf", size=26)
+
+            text_width = draw.textlength(prompt, font)
+            text_x = (img.width - text_width) // 2  # Center text
+            draw.text((text_x,10),prompt, fill=(0, 0, 0),font=font)
+
+
+
+
+            max_font_size = 75
+            font_path = "Roboto-Regular.ttf"
+            font = ImageFont.truetype(font_path, max_font_size)
+
+
+
+            # Function to check if the text fits within the given width and height
+            def text_fits(font, text, max_width, max_height):
+                lines = text.split('\n')
+                total_height = 0
+                max_line_width = 0
+                
+                for line in lines:
+                    # Use textbbox() to calculate the bounding box of the text
+                    bbox = draw.textbbox((0, 0), line, font=font)
+                    line_width = bbox[2] - bbox[0]  # width of the text
+                    line_height = bbox[3] - bbox[1]  # height of the text
+                    max_line_width = max(max_line_width, line_width)
+                    total_height += line_height
+                
+                return max_line_width <= max_width and total_height <= max_height
+            
+            # Start with the max font size and reduce until text fits
+            font_size = max_font_size
+            while font_size > 1:
+                font = ImageFont.truetype(font_path, font_size)
+                
+                # Check if the text fits within the image bounds
+                if text_fits(font, text, 820, 320):
+                    break
+                
+                font_size -= 1
+            
+            # Now we have the maximum font size that fits within the bounds, calculate the wrapping
+            lines = text.split('\n')
+            total_text_height = 0
+            line_heights = []
+            
+            # Calculate total height of all lines and individual line heights
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_height = bbox[3] - bbox[1]
+                total_text_height += line_height
+                line_heights.append(line_height)
+            
+            # Calculate position to center the text
+            y_offset = (height - total_text_height) // 2
+            for i, line in enumerate(lines):
+                # Get the bounding box of the line to center it horizontally
+                bbox = draw.textbbox((0, 0), line, font=font)
+                text_width = bbox[2] - bbox[0]
+                x_offset = (width - text_width) // 2  # Center the text horizontally
+                draw.text((x_offset, y_offset), line, font=font, fill="black")
+                y_offset += line_heights[i]  # Move to the next line
+            
+
+
+
+
+
+
+            width, height = img.size # aspect is 
+
+            if (width/height)>(3/2):
+                # find height diff to make it be 5/4
+                height_d = (width/1.25)-height
+
+                height_border = int(height_d/2) #size of height to add
+
+                border_img = Image.open('goldy.png')
+                border_img = border_img.resize((height_border, height_border), Image.Resampling.LANCZOS)
+
+                img = ImageOps.expand(img, border=(0,height_border,0,height_border), fill=(255,255,255))
+
+                row_count = width // height_border
+
+                offset = int(((width)-(row_count*height_border))/2)
+
+                for i in range(row_count):
+                    img.paste(border_img, (offset+(i*height_border),0))
+                    img.paste(border_img, (offset+(i*height_border),height+height_border))
+
+            client.loop.create_task(saveImage(img, prompt, "thermal-printer"))
+
+
+
+            return jsonify(res='success')
+        elif request.headers['dtype'] == 'both':
+            data = json.loads(request.data)
+        
+            response_img = data['image']
+            response_txt = data['text']
+            prompt = data['prompt']
+            text = prompt
+            raw_img = Image.open(BytesIO(base64.decodebytes(bytes(response_img, "utf-8")))).convert("RGBA")
+
+
+
+            img = Image.new("RGBA", raw_img.size, "WHITE") # Create a white rgba background
+            img.paste(raw_img, (0, 0), raw_img)              # Paste the image on the background. Go to the links given below for details.
+
+            img = ImageOps.expand(img, border=(0,100,0,120), fill=(255,255,255))
+            draw = ImageDraw.Draw(img)
+
+
+            max_font_size = 75
+            font_path = "font.ttf"
+            font = ImageFont.truetype(font_path, max_font_size)
+
+
+            width, height = img.size # aspect is 
+
+            # Function to check if the text fits within the given width and height
+            def text_fits(font, text, max_width, max_height):
+                lines = text.split('\n')
+                total_height = 0
+                max_line_width = 0
+                
+                for line in lines:
+                    # Use textbbox() to calculate the bounding box of the text
+                    bbox = draw.textbbox((0, 0), line, font=font)
+                    line_width = bbox[2] - bbox[0]  # width of the text
+                    line_height = bbox[3] - bbox[1]  # height of the text
+                    max_line_width = max(max_line_width, line_width)
+                    total_height += line_height
+                
+                return max_line_width <= max_width and total_height <= max_height
+            
+            # Start with the max font size and reduce until text fits
+            font_size = max_font_size
+            while font_size > 1:
+                font = ImageFont.truetype(font_path, font_size)
+                
+                # Check if the text fits within the image bounds
+                if text_fits(font, text, width-20, 70):
+                    break
+                
+                font_size -= 1
+            
+            # Now we have the maximum font size that fits within the bounds, calculate the wrapping
+            lines = text.split('\n')
+            total_text_height = 0
+            line_heights = []
+            
+            # Calculate total height of all lines and individual line heights
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_height = bbox[3] - bbox[1]
+                total_text_height += line_height
+                line_heights.append(line_height)
+            
+            # Calculate position to center the text
+            y_offset = (70 - total_text_height) // 2
+            for i, line in enumerate(lines):
+                # Get the bounding box of the line to center it horizontally
+                bbox = draw.textbbox((0, 0), line, font=font)
+                text_width = bbox[2] - bbox[0]
+                x_offset = (width - text_width) // 2  # Center the text horizontally
+                draw.text((x_offset, y_offset), line, font=font, fill="black")
+                y_offset += line_heights[i]  # Move to the next line
+            
+
+
+
+            text = response_txt
+
+
+            font_path = "Roboto-Regular.ttf"
+            font = ImageFont.truetype(font_path, max_font_size)
+
+
+            # Start with the max font size and reduce until text fits
+            font_size = max_font_size
+            while font_size > 1:
+                font = ImageFont.truetype(font_path, font_size)
+                
+                # Check if the text fits within the image bounds
+                if text_fits(font, text, width-20, 110):
+                    break
+                
+                font_size -= 1
+            
+            # Now we have the maximum font size that fits within the bounds, calculate the wrapping
+            lines = text.split('\n')
+            total_text_height = 0
+            line_heights = []
+            
+            # Calculate total height of all lines and individual line heights
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_height = bbox[3] - bbox[1]
+                total_text_height += line_height
+                line_heights.append(line_height)
+            
+            # Calculate position to center the text
+            y_offset = height-110+(total_text_height //2)
+            for i, line in enumerate(lines):
+                # Get the bounding box of the line to center it horizontally
+                bbox = draw.textbbox((0, 0), line, font=font)
+                text_width = bbox[2] - bbox[0]
+                x_offset = (width - text_width) // 2  # Center the text horizontally
+                draw.text((x_offset, y_offset), line, font=font, fill="black")
+                y_offset += line_heights[i]  # Move to the next line
+            
+            client.loop.create_task(saveImage(img, prompt, "color-printer"))
+            
+            return jsonify(res='success')
     return 'failure'
 
 
@@ -293,9 +574,11 @@ def handle_print_response():
     toPrintImgPath = printRandomImg(current_prompt)
 
     if toPrintImgPath == "":
+        logEvent("color-print")
         return 'success'
 
     os.system('python thermal-print.py '+toPrintImgPath+' > /dev/rfcomm0')
+    logEvent("thermal-print")
     return 'success'
     
 
@@ -320,9 +603,10 @@ def connect_to_printer():
     asyncio.set_event_loop(asyncio.new_event_loop())
 
     subprocess.Popen(['sudo', 'rfcomm', 'connect', '0', '24:54:89:AE:0A:51'])
-
+    time.sleep(1)
+    subprocess.Popen(['sudo', 'chmod', 'a+rw', '/dev/rfcomm0'])
+'''  
 frame_index = 0
-
 
 def display_thread():
     asyncio.set_event_loop(asyncio.new_event_loop())
@@ -367,7 +651,7 @@ def display_thread():
     root.after(60, play_video)
 
     root.mainloop()
-    
+'''
 
 
 if __name__ == '__main__':
@@ -385,7 +669,7 @@ if __name__ == '__main__':
     staticUrl = subprocess.Popen(['ngrok', 'http', '--url=mongoose-full-barely.ngrok-free.app', '50298'])
     Thread(target=run_discord_bot_in_thread, daemon=True).start()
     Thread(target=connect_to_printer, daemon=True).start()
-    Thread(target=display_thread, daemon=True).start()
+    # Thread(target=display_thread, daemon=True).start()
 
     app.run(host='0.0.0.0', port=50298, debug=False) 
 
